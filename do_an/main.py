@@ -99,8 +99,7 @@ def them_mon_an(callback_cap_nhat=None):
     btn_save = PushButton(window_2, text="LƯU VÀO HỆ THỐNG", command=thuc_hien_ghi_file, width=25)
     btn_save.bg = "#98FB98"
     btn_save.text_size = 16
-# --- Hàm 2: Giao diện lựa chọn món ăn (Phiên bản Fix ô hiển thị ngang) ---
-# --- Hàm 2: Giao diện lựa chọn món ăn (Bản Fix Lọc Dữ Liệu Thật) ---
+# --- Hàm 2: Giao diện lựa chọn món ăn ---
 def chon_mon_an():
     doc_du_lieu_tu_file()
     window_1 = Window(app, title="Danh sách món ăn", width=1250, height=880, bg="#FFF5EE")
@@ -212,7 +211,7 @@ def chon_mon_an():
                 PushButton(Box_1, image=anh, width=img_w, height=img_h, grid=[col, row], 
                             command=lambda t=ten: chon_mon_tu_anh(t))
 
-    # Sidebar điều khiển lọc
+    # Bộ lọc thông minh
     Box_2 = Box(container, align="left", width=340, height=450)
     Box_2.bg = "#FFCC66" 
     Text(Box_2, "Lọc theo:", size=20, bold=True)
@@ -272,7 +271,7 @@ app = App(title="Ứng dụng đề xuất đồ ăn", width=500, height=550, bg
 
 Box(app, height=20, width="fill") 
 # Tiêu đề cực lớn (Size 30)
-Text(app, "🍟 CHỌN MÓN ĂN 🍱", size=30, bold=True, color="#D2691E")
+Text(app, "🍟 CHỌN MÓN ĂN 🍟", size=30, bold=True, color="#D2691E")
 Box(app, height=40, width="fill") 
 
 # Các nút Menu chính (Size 18)
@@ -294,3 +293,4 @@ btn_3.text_color = "white"
 btn_3.text_size = 18
 
 app.display()
+
