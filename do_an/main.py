@@ -1,4 +1,18 @@
 from guizero import *
+import random
+import os
+import shutil
+ds_chi_tiet = []
+def doc_du_lieu_tu_file():
+    global ds_chi_tiet
+    ds_chi_tiet = []  # Làm sạch danh sách trước khi nạp mới
+    try:
+        with open("mon_an.txt", "r", encoding="utf-8") as f:
+            for dong in f:
+                if dong.strip():
+                    ds_chi_tiet.append(dong.strip())
+    except FileNotFoundError:
+        pass # Nếu chưa có file thì danh sách để trống
 
 # --- Hàm 1: Xử lí dữ liệu lưu vào file lichsu.txt ---
 def luu_vao_file(ten_mon, dia_chi, sdt):
@@ -26,95 +40,217 @@ def luu_vao_file(ten_mon, dia_chi, sdt):
     with open(ten_file, "w", encoding="utf-8") as f:
         f.writelines(du_lieu_moi)
 
-# --- Hàm 2: Giao diện lựa chọn món ăn ---
-def chon_mon_an():
-    window_1 = Window(app, title="Danh sách món ăn", width=1000, height=600)
-    Text(window_1, "Danh sách các món ăn đề xuất", size=12, bold=True)
+def them_mon_an(callback_cap_nhat=None):
+    window_2 = Window(app, title="Thêm món ăn", width=650, height=580, bg="#FFF5EE")
+    window_2.tk.attributes("-topmost", True)
     
-    # Dữ liệu hiển thị chi tiết
-    ds_chi_tiet = [
-        "Phở Bò | 45.000đ | 123 Lý Tự Trọng | 090123",
-        "Bánh Mì | 20.000đ | 45 Lê Lợi | 090777",
-        "Cơm Tấm | 40.000đ | 89 Nguyễn Huệ | 098812",
-        "Bún Bò | 45.000đ | 12 Võ Văn Tần | 091234",
-        "Xôi Gà | 25.000đ | 202 CMT8 | 093344",
-        "Mì Quảng | 35.000đ | 55 Phan Chu Trinh | 094455"
-    ]
+    Text(window_2, "NHẬP THÔNG TIN MÓN ĂN MỚI", size=20, bold=True, color="#D2691E")
+    Box(window_2, height=10, width="fill")
+    
+    form = Box(window_2, layout="grid", width="fill", height=320)
+    labels = ["Tên món ăn:", "Giá tiền:", "Địa chỉ:", "Số điện thoại:", "Hình ảnh:"]
+    inputs = []
+    
+    for i, lb_text in enumerate(labels):
+        Text(form, text=lb_text, grid=[0, i], align="left", size=14)
+        if i < 4:
+            inputs.append(TextBox(form, grid=[1, i], width=45))
+        else:
+            box_anh = Box(form, grid=[1, i], align="left", layout="grid")
+            txt_anh = TextBox(box_anh, grid=[0,0], width=30, enabled=False)
+            txt_anh.bg = "white"
+            inputs.append(txt_anh)
+            
+            def mo_hop_chon_file():
+                from tkinter import filedialog
+                # Sử dụng filedialog của tkinter với tham số parent để cửa sổ chọn file nổi lên trên window_2
+                duong_dan = filedialog.askopenfilename(parent=window_2.tk, title="Chọn ảnh", filetypes=[("Image", "*.png *.jpg")])
+                
+                if duong_dan:
+                    ten_file = os.path.basename(duong_dan)
+                    # COPY file ảnh từ nguồn vào thư mục hiện tại của dự án
+                    try:
+                        shutil.copy(duong_dan, ten_file)
+                    except shutil.SameFileError:
+                        pass # Nếu chọn ảnh đã có sẵn trong thư mục thì bỏ qua
+                    txt_anh.enabled = True
+                    txt_anh.value = ten_file
+                    txt_anh.enabled = False
+                window_2.focus()
 
-    container = Box(window_1, width="fill")
-    
-    # Khu vực chứa các nút bấm (Layout Grid)
-    Box_1 = Box(container, layout="grid", align="left", border=3)
-    
-    btn_pho = PushButton(Box_1, image="pho_bo.png", width=220, height=180, text="Phở Bò", grid=[0, 1], command=lambda: chon_mon_tu_anh("Phở Bò"))
-    btn_banhmi = PushButton(Box_1, image="banh_mi.png", width=220, height=180, text="Bánh Mì", grid=[1, 1], command=lambda: chon_mon_tu_anh("Bánh Mì"))
-    btn_comtam = PushButton(Box_1, image="com_tam.png", width=220, height=180, text="Cơm Tấm", grid=[2, 1], command=lambda: chon_mon_tu_anh("Cơm Tấm"))
-    btn_bunbo = PushButton(Box_1, image="bun_bo.png", width=220, height=180, text="Bún Bò", grid=[0, 2], command=lambda: chon_mon_tu_anh("Bún Bò"))
-    btn_xoi = PushButton(Box_1, image="xoi.png", width=220, height=180, text="Xôi Gà", grid=[1, 2], command=lambda: chon_mon_tu_anh("Xôi Gà"))
-    btn_miquang = PushButton(Box_1, image="mi_quang.png", width=220, height=180, text="Mì Quảng", grid=[2, 2], command=lambda: chon_mon_tu_anh("Mì Quảng"))
-    
-    # Danh sách các nút để phục vụ việc ẩn/hiện nhanh
-    cac_nut = [btn_pho, btn_banhmi, btn_comtam, btn_bunbo, btn_xoi, btn_miquang]
-    ten_cac_nut = ["Phở Bò", "Bánh Mì", "Cơm Tấm", "Bún Bò", "Xôi Gà", "Mì Quảng"]
+            PushButton(box_anh, text="📁 Chọn file", grid=[1,0], command=mo_hop_chon_file).text_size = 11
 
-    # Khu vực bộ lọc (Đã sửa lỗi bg)
-    Box_2 = Box(container, align="left")
-    Box_2.bg = "lightblue" 
-    
-    Text(Box_2, "Lọc theo:", size=15)
-    choice = ButtonGroup(Box_2, options=["Tất cả", "Rẻ nhất", "Gần nhất", "Hay ăn nhất"], selected="Tất cả")
-    choice.text_size = 15
-    
-    # Hàm xử lý logic ẩn hiện khi nhấn nút Lọc
-    def xu_ly_loc():
-        for b in cac_nut: b.hide() # Ẩn hết đi trước khi lọc
-        tieu_chi = choice.value
+    def thuc_hien_ghi_file():
+        vals = [inp.value.strip() for inp in inputs]
+        if vals[1].isdigit(): # Định dạng giá tiền
+            vals[1] = "{:,}".format(int(vals[1])).replace(",", ".") + "đ"
         
-        if tieu_chi == "Tất cả":
-            for b in cac_nut: b.show()
-        elif tieu_chi == "Rẻ nhất":
-            btn_banhmi.show(); btn_xoi.show()
+        if all([vals[0], vals[1], vals[4]]):
+            with open("mon_an.txt", "a", encoding="utf-8") as f:
+                f.write(f"\n{' | '.join(vals)}") # Ghi đủ 5 cột
+            doc_du_lieu_tu_file()
+            window_2.destroy()
+            if callback_cap_nhat:
+                callback_cap_nhat() # Gọi hàm cập nhật giao diện danh sách
+        else:
+            warn("Lỗi", "Vui lòng nhập đủ thông tin và CHỌN ẢNH!")
+
+    Box(window_2, height=20, width="fill") 
+    btn_save = PushButton(window_2, text="LƯU VÀO HỆ THỐNG", command=thuc_hien_ghi_file, width=25)
+    btn_save.bg = "#98FB98"
+    btn_save.text_size = 16
+# --- Hàm 2: Giao diện lựa chọn món ăn (Phiên bản Fix ô hiển thị ngang) ---
+# --- Hàm 2: Giao diện lựa chọn món ăn (Bản Fix Lọc Dữ Liệu Thật) ---
+def chon_mon_an():
+    doc_du_lieu_tu_file()
+    window_1 = Window(app, title="Danh sách món ăn", width=1250, height=880, bg="#FFF5EE")
+    window_1.tk.attributes("-topmost", True)
+    
+    Text(window_1, "Danh sách các món ăn đề xuất", size=28, bold=True, color="#D2691E")
+    container = Box(window_1, width="fill", height=460)
+    
+    # Khu vực lưới ảnh: Cố định 6 vị trí
+    Box_1 = Box(container, layout="grid", align="left", border=3, width=820, height=450)
+    
+    anh_mac_dinh = ["pho_bo.png", "banh_mi.png", "com_tam.png", "bun_bo.png", "xoi.png", "mi_quang.png"]
+    ten_mac_dinh = ["Phở bò", "Bánh mì", "Cơm tấm", "Bún bò", "Xôi gà", "Mì quảng"]
+    
+    def chon_mon_tu_anh(ten_mon):
+        txt_chi_tiet.enabled = True
+        txt_chi_tiet.value = "" 
+        for dong in ds_chi_tiet:
+            # So khớp chính xác tên món ở cột đầu tiên
+            # Cập nhật logic tách chuỗi để đồng bộ với dữ liệu mới (xử lý cả "|")
+            parts = [s.strip() for s in dong.split("|")]
+            if parts and ten_mon.lower() == parts[0].lower():
+                txt_chi_tiet.value = dong 
+                break
+        txt_chi_tiet.enabled = False
+
+    # --- CƠ CHẾ LỌC DỮ LIỆU THỰC TẾ ---
+    def cap_nhat_giao_dien():
+        txt_chi_tiet.value = "" # Xóa thông tin chi tiết cũ để người dùng biết giao diện đã làm mới
+        # Xóa các nút cũ để vẽ lại theo bộ lọc mới
+        for widget in list(Box_1.children):
+            widget.destroy()
+        
+        doc_du_lieu_tu_file()
+        ds_hien_thi = ds_chi_tiet.copy()
+        tieu_chi = choice.value
+
+        # Hàm hỗ trợ lấy giá tiền từ chuỗi
+        def lay_gia(s):
+            try:
+                return int(s.split("|")[1].replace(".", "").replace("đ", "").strip())
+            except: return 999999999
+
+        if tieu_chi == "Rẻ nhất":
+            # Tìm mức giá thấp nhất trong danh sách hiện có
+            tat_ca_gia = [lay_gia(s) for s in ds_hien_thi]
+            if tat_ca_gia:
+                min_gia = min(tat_ca_gia)
+                # Lọc: Chỉ giữ lại các món có giá bằng giá thấp nhất
+                ds_hien_thi = [s for s in ds_hien_thi if lay_gia(s) == min_gia]
+
         elif tieu_chi == "Gần nhất":
-            btn_pho.show(); btn_comtam.show()
+            # Mô phỏng tìm quán gần nhất từ dữ liệu thực tế trong file
+            # Chọn ngẫu nhiên 2 món từ danh sách hiện có để hiển thị
+            if len(ds_hien_thi) > 0:
+                k = min(len(ds_hien_thi), 2)
+                ds_hien_thi = random.sample(ds_hien_thi, k)
+
         elif tieu_chi == "Hay ăn nhất":
-            mon_hot, max_lan = "", 0
+            # Tìm món có số lần ăn nhiều nhất (Logic giống snippet)
+            tan_suat = {}
+            max_lan = 0
             try:
                 with open("lich_su.txt", "r", encoding="utf-8") as f:
                     for dong in f:
                         cot = dong.strip().split(" | ")
-                        if len(cot) >= 4 and int(cot[3]) > max_lan:
-                            max_lan, mon_hot = int(cot[3]), cot[0]
-                if mon_hot in ten_cac_nut:
-                    cac_nut[ten_cac_nut.index(mon_hot)].show()
+                        if len(cot) >= 4:
+                            ten = cot[0].lower()
+                            sl = int(cot[3])
+                            tan_suat[ten] = sl
+                            if sl > max_lan:
+                                max_lan = sl
             except: pass
+            
+            # Chỉ hiển thị món có số lần ăn cao nhất (Filter)
+            if max_lan > 0:
+                ds_hien_thi = [s for s in ds_hien_thi if tan_suat.get(s.split(" | ")[0].lower(), 0) == max_lan]
+            else:
+                random.shuffle(ds_hien_thi)
+        else:
+            # Nếu chọn "Tất cả", trộn ngẫu nhiên danh sách để thay đổi vị trí hiển thị
+            random.shuffle(ds_hien_thi)
 
-    PushButton(Box_2, text="THAY ĐỔI", command=xu_ly_loc)
-    
-    # Danh sách hiển thị thông tin chi tiết
-    Text(window_1, "Chi tiết thực đơn:", size=11, bold=True)
-    lb_chi_tiet = ListBox(window_1, width="fill", height=150, scrollbar=True)
-    
-    # Hàm khi bấm vào hình ảnh: Đồng bộ dữ liệu lên ListBox
-    def chon_mon_tu_anh(ten_mon):
-        lb_chi_tiet.clear()
-        for dong in ds_chi_tiet:
-            if dong.startswith(ten_mon):
-                lb_chi_tiet.append(dong)
-                lb_chi_tiet.value = dong
-                break
+        # Vẽ lưới 6 ô dựa trên danh sách đã lọc
+        img_w, img_h = 270, 215
+        
+        # Tạo từ điển ánh xạ tên món -> ảnh để đảm bảo lấy đúng ảnh khi danh sách bị trộn
+        dict_anh_mac_dinh = {t.lower(): a for t, a in zip(ten_mac_dinh, anh_mac_dinh)}
 
-    # Hàm xác nhận: Lưu thông tin cuối cùng vào file và đóng tab
+        for i in range(6):
+            col, row = i % 3, (i // 3) + 1
+            ten, anh = "", ""
+            
+            if i < len(ds_hien_thi):
+                # Tách chuỗi an toàn (xử lý cả trường hợp dính chữ như "Tên|Giá")
+                thong_tin = [s.strip() for s in ds_hien_thi[i].split("|")]
+                ten = thong_tin[0]
+                
+                # Logic: Nếu file có ảnh thì dùng, nếu không thì tra cứu theo tên trong danh sách mặc định
+                anh = thong_tin[4] if len(thong_tin) > 4 and thong_tin[4] else dict_anh_mac_dinh.get(ten.lower(), anh_mac_dinh[i % 6])
+                
+                # KIỂM TRA AN TOÀN: Nếu file ảnh không tồn tại thực tế, dùng ảnh mặc định để tránh crash
+                if not os.path.exists(anh):
+                    anh = anh_mac_dinh[i % 6]
+            elif tieu_chi == "Tất cả": # Chỉ hiện dữ liệu mặc định khi chọn Tất cả
+                ten, anh = ten_mac_dinh[i], anh_mac_dinh[i]
+                
+            if ten: # Chỉ tạo nút nếu có dữ liệu
+                PushButton(Box_1, image=anh, width=img_w, height=img_h, grid=[col, row], 
+                            command=lambda t=ten: chon_mon_tu_anh(t))
+
+    # Sidebar điều khiển lọc
+    Box_2 = Box(container, align="left", width=340, height=450)
+    Box_2.bg = "#FFCC66" 
+    Text(Box_2, "Lọc theo:", size=20, bold=True)
+    choice = ButtonGroup(Box_2, options=["Tất cả", "Rẻ nhất", "Gần nhất", "Hay ăn nhất"], selected="Tất cả")
+    choice.text_size = 18
+
+    # --- KHU VỰC Ô TRỐNG HIỂN THỊ CHI TIẾT ---
+    Box(window_1, height=30, width="fill") 
+    row_info = Box(window_1, width="fill", layout="grid")
+    Text(row_info, "Chi tiết thực đơn: ", size=24, bold=True, grid=[0,0], align="left")
+    txt_chi_tiet = TextBox(row_info, grid=[1,0], width=70, align="left", enabled=False)
+    txt_chi_tiet.text_size = 22
+    txt_chi_tiet.bg = "white"
+
+    # --- HÀM XÁC NHẬN VÀ LƯU (Sửa lỗi nhảy dòng) ---
     def xac_nhan_va_luu():
-        if not lb_chi_tiet.value:
-            warn("Thông báo", "Vui lòng chọn món trước!")
-            return
-        # Tách chuỗi để lấy đúng: Tên | Địa chỉ | SĐT
-        thong_tin = lb_chi_tiet.value.split(" | ")
-        luu_vao_file(thong_tin[0], thong_tin[2], thong_tin[3])
-        window_1.destroy()
+        du_lieu = txt_chi_tiet.value
+        if "|" in du_lieu:
+            thong_tin = [s.strip() for s in du_lieu.split("|")]
+            if len(thong_tin) >= 4:
+                # thong_tin[0]: tên, [2]: địa chỉ, [3]: sđt
+                luu_vao_file(thong_tin[0], thong_tin[2], thong_tin[3])
+                window_1.destroy()
 
-    PushButton(window_1, text="Xác nhận và lưu", command=xac_nhan_va_luu, width=20)
+    # Nút xác nhận đẩy lên cao
+    Box(window_1, height=40, width="fill") 
+    btn_confirm = PushButton(window_1, text="✔️ Xác nhận và lưu", command=xac_nhan_va_luu, width=30)
+    btn_confirm.text_size = 24
+    btn_confirm.bg = "#98FB98"
+    Box(window_1, height=80, width="fill") 
 
+    # Các nút bấm bên Sidebar
+    Box(Box_2, height=10, width="fill")
+    PushButton(Box_2, text="🔄 THAY ĐỔI", command=cap_nhat_giao_dien, width=15).text_size = 16
+    Box(Box_2, height=10, width="fill")
+    PushButton(Box_2, text="➕ THÊM MÓN ĂN", command=lambda: them_mon_an(cap_nhat_giao_dien), width=15).text_size = 16
+
+    cap_nhat_giao_dien() # Gọi lần đầu để hiển thị ngay khi mở
 # --- Hàm 3: Cửa sổ xem lịch sử ---
 def mo_lich_su():
     win_ls = Window(app, title="Lịch sử chọn", width=500, height=400)
@@ -132,12 +268,29 @@ def mo_lich_su():
     PushButton(win_ls, text="Đóng", command=win_ls.destroy)
 
 # --- Menu lựa chọn ---
-app = App(title="Ứng dụng đề xuất đồ ăn", width=400, height=350)
+app = App(title="Ứng dụng đề xuất đồ ăn", width=500, height=550, bg="#FFF5EE")
 
-Text(app, "CHỌN MÓN ĂN", size=18, bold=True)
-Box(app, height=20, width="fill") # Tạo khoảng trống
-PushButton(app, text="Chọn món ăn", width=20, command=chon_mon_an)
-PushButton(app, text="Lịch sử chọn", width=20, command=mo_lich_su)
-PushButton(app, text="Thoát", width=20, command=app.destroy)
+Box(app, height=20, width="fill") 
+# Tiêu đề cực lớn (Size 30)
+Text(app, "🍟 CHỌN MÓN ĂN 🍱", size=30, bold=True, color="#D2691E")
+Box(app, height=40, width="fill") 
+
+# Các nút Menu chính (Size 18)
+btn_1 = PushButton(app, text="✨ Chọn món ăn", width=25, command=chon_mon_an)
+btn_1.bg = "#FFD700"
+btn_1.text_size = 18
+
+Box(app, height=20, width="fill")
+
+btn_2 = PushButton(app, text="📜 Lịch sử chọn", width=25, command=mo_lich_su)
+btn_2.bg = "#98FB98"
+btn_2.text_size = 18
+
+Box(app, height=20, width="fill")
+
+btn_3 = PushButton(app, text="❌ Thoát", width=25, command=app.destroy)
+btn_3.bg = "#FF7F50"
+btn_3.text_color = "white"
+btn_3.text_size = 18
 
 app.display()
